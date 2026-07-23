@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VENDAO — Crypto Co-op Vending</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;600;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --lime: #CDFF50;
+    --dark: #0A0A0F;
+    --glass: rgba(255,255,255,0.06);
+    --glass-border: rgba(255,255,255,0.08);
+    --text-dim: rgba(255,255,255,0.45);
+  }
+  body {
+    background: var(--dark);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 0%, rgba(205,255,80,0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 80% 100%, rgba(80,200,255,0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .app {
+    width: 390px;
+    max-width: 100vw;
+    min-height: 100dvh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+  }
+  /* Top bar */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0 24px;
+  }
+  .logo {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 4px;
+    color: var(--lime);
+  }
+  .logo span { color: rgba(255,255,255,0.3); font-weight: 400; }
+  .wallet-pill {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .wallet-dot {
+    width: 6px; height: 6px;
+    background: #4ADE80;
+    border-radius: 50%;
+    animation: pulse 2s ease infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  /* Pitch */
+  .pitch {
+    padding: 16px 0 28px;
+    text-align: center;
+  }
+  .pitch h1 {
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    line-height: 1.35;
+    background: linear-gradient(135deg, #fff 40%, var(--lime));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  /* Machine card */
+  .machine-card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    backdrop-filter: blur(20px);
+  }
+  .machine-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .machine-name {
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .machine-tag {
+    background: rgba(205,255,80,0.12);
+    color: var(--lime);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .slots-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .slot {
+    aspect-ratio: 1;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+  }
+  .slot:hover, .slot.selected {
+    border-color: var(--lime);
+    background: rgba(205,255,80,0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(205,255,80,0.08);
+  }
+  .slot.selected::after {
+    content: '';
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 8px; height: 8px;
+    background: var(--lime);
+    border-radius: 50%;
+  }
+  .slot-icon { font-size: 28px; margin-bottom: 4px; }
+  .slot-price {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+  /* Stats row */
+  .stats-row {
+    display: flex;
+    gap: 10px;
+  }
+  .stat-box {
+    flex: 1;
+    background: rgba(255,255,255,0.02);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-val {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--lime);
+  }
+  .stat-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  /* CTA */
+  .cta-area { padding: 4px 0 0; }
+  .vend-btn {
+    width: 100%;
+    padding: 18px;
+    border: none;
+    border-radius: 16px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--lime);
+    color: var(--dark);
+    position: relative;
+    overflow: hidden;
+  }
+  .vend-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 40px rgba(205,255,80,0.25);
+  }
+  .vend-btn:active { transform: scale(0.98); }
+  .vend-btn.vending {
+    background: linear-gradient(90deg, var(--lime), #a8e030);
+    animation: shimmer 1.2s ease infinite;
+  }
+  .vend-btn.done {
+    background: #4ADE80;
+  }
+  @keyframes shimmer {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+  /* Members bar */
+  .members-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 0 8px;
+  }
+  .avatar-stack {
+    display: flex;
+  }
+  .avatar {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--dark);
+    margin-left: -6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+  }
+  .avatar:first-child { margin-left: 0; }
+  .members-text {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .members-text b { color: rgba(255,255,255,0.7); }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="logo">VENDAO<span>.co</span></div>
+    <div class="wallet-pill"><div class="wallet-dot"></div>0x7f…3a2d</div>
+  </div>
+
+  <div class="pitch">
+    <h1>Own the machine together.<br>Split every drop.</h1>
+  </div>
+
+  <div class="machine-card">
+    <div class="machine-header">
+      <div class="machine-name">BK-07 · Bushwick Bodega</div>
+      <div class="machine-tag">Co-op Live</div>
+    </div>
+    <div class="slots-grid">
+      <div class="slot" onclick="selectSlot(this)"><div class="slot-icon">🥤</div><div class="slot-price">0.003 Ξ</div></div>
+      <div class="slot selected" onclick="selectSlot(this)"><div class="slot-icon">☕</div><div class="slot-price">0.005 Ξ</div></div>
+      <div class="slot" onclick="selectSlot(this)"><div class="slot-icon">🧃</div><div class="slot-price">0.002 Ξ</div></div>
+      <div class="slot" onclick="selectSlot(this)"><div class="slot-icon">💊</div><div class="slot-price">0.004 Ξ</div></div>
+      <div class="slot" onclick="selectSlot(this)"><div class="slot-icon">🍫</div><div class="slot-price">0.001 Ξ</div></div>
+      <div class="slot" onclick="selectSlot(this)"><div class="slot-icon">🔋</div><div class="slot-price">0.008 Ξ</div></div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val">2.41 Ξ</div><div class="stat-label">Treasury</div></div>
+      <div class="stat-box"><div class="stat-val">12.3%</div><div class="stat-label">Your Share</div></div>
+      <div class="stat-box"><div class="stat-val">847</div><div class="stat-label">Vends Today</div></div>
+    </div>
+  </div>
+
+  <div class="cta-area">
+    <button class="vend-btn" onclick="vend(this)">VEND · 0.005 Ξ</button>
+  </div>
+
+  <div class="members-bar">
+    <div class="avatar-stack">
+      <div class="avatar" style="background:#6366f1">🟣</div>
+      <div class="avatar" style="background:#f43f5e">🔴</div>
+      <div class="avatar" style="background:#eab308">🟡</div>
+      <div class="avatar" style="background:#22d3ee">🔵</div>
+    </div>
+    <div class="members-text"><b>23 co-owners</b> earning right now</div>
+  </div>
+</div>
+
+<script>
+function selectSlot(el) {
+  document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  const price = el.querySelector('.slot-price').textContent;
+  document.querySelector('.vend-btn').textContent = 'VEND · ' + price;
+}
+
+function vend(btn) {
+  if (btn.dataset.busy) return;
+  btn.dataset.busy = '1';
+  btn.textContent = 'CONFIRMING ON-CHAIN…';
+  btn.classList.add('vending');
+  setTimeout(() => {
+    btn.textContent = '✓ VENDED — YIELD SPLIT TO CO-OP';
+    btn.classList.remove('vending');
+    btn.classList.add('done');
+    // bump vend counter
+    const vendEl = document.querySelectorAll('.stat-val')[2];
+    vendEl.textContent = (parseInt(vendEl.textContent) + 1).toLocaleString();
+    setTimeout(() => {
+      btn.textContent = 'VEND · ' + document.querySelector('.slot.selected .slot-price').textContent;
+      btn.classList.remove('done');
+      delete btn.dataset.busy;
+    }, 1800);
+  }, 1500);
+}
+</script>
+</body>
+</html>
